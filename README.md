@@ -7,3 +7,5 @@ Our working document is [on GoogleDocs](https://docs.google.com/document/d/1ih0r
 
 [This overview figure](https://viewer.diagrams.net/?highlight=0000ff&edit=_blank&layers=1&nav=1&title=BH2020%20-%20P27#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1aJjlO6hwsYPtAafis16KPgVd1Gb50fAH%26export%3Ddownload)
 illustrates what we'd like to do.
+
+We will use [a Google Drive folder](https://drive.google.com/drive/folders/16h8rum2IbkYZUrX-cQHwVaMBEnJZDoA3) to share files.
