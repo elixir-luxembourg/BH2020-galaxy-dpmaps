@@ -1,0 +1,76 @@
+$badass: #ffffff;
+$pluginName: starter-kit;
+
+.#{$pluginName}-container {
+    padding: 10px;
+    background-color: $badass;
+}
+
+.disabledbutton {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+input[type=checkbox] .cbcontainer {
+    margin-left: 0; }
+
+hr {
+    border-radius: 5px;
+    background: linear-gradient(to right, rgb(242, 137, 136), rgb(108, 106, 72));
+}
+
+.custom_checkbox {
+    margin: 2px 0px 0px 0px;
+    text-align: center !important;
+    color: #6d6d6d;
+    cursor: pointer; }
+  
+  .custom_checkbox, input[type=checkbox] {
+    vertical-align: middle; }
+  
+  .custom_checkbox_label {
+    font-family: lato;
+    color: #333
+  }
+
+  .custom_select_label {
+    padding-top: 4px !important;
+    padding: 0;
+    text-align: right;
+    margin-left: 5px;
+  }
+
+.inputfile {
+    font-size: 1.0em;
+    font-weight: 500;
+    color: black;
+    display: inline-block;
+}
+
+.btn-download {
+    background-color: DodgerBlue;
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.btn-download:hover {
+    background-color: RoyalBlue;
+}
+
+.btn-group {
+    width: 100%;
+}
+
+.clickElementinTable {
+    background-color: transparent;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.clickElementinTable body {
+
+    text-align: center;
+}
