@@ -10,6 +10,7 @@ let GalaxyData = {};
 let GalaxyTable = null;
 let maxFC = 0;
 let Header = true;
+let CSV = false;
 const globals = {
   selected: [],
   allBioEntities: [],
@@ -145,6 +146,10 @@ function initMainPageStructure() {
 
   try {
     Header = url.searchParams.get("header") != "false";
+  } catch (_) {}
+
+  try {
+    CSV = url.searchParams.get("datatype") == "csv";
   } catch (_) {}
 
   fetchGalaxyQuery(query).then(raw_galaxy_data => {
@@ -381,13 +386,13 @@ async function fillTable() {
   GalaxyTable.clear();
 
   for (var e in GalaxyData) {
-    if (Math.abs(GalaxyData[e].fc) < fc_threshold && $("#gal_checkbox_fc_enable")[0].checked) continue;
+    if (isNaN(GalaxyData[e].fc) == false && Math.abs(GalaxyData[e].fc) < fc_threshold && $("#gal_checkbox_fc_enable")[0].checked) continue;
 
     if ($("#gal_checkbox_pvalue_enable")[0].checked) {
       if ($('#gal_checkbox_adjusted')[0].checked) {
-        if (GalaxyData[e].pvalue_adj > pvalue_threshold) continue;
+        if (isNaN(GalaxyData[e].pvalue_adj) == false && GalaxyData[e].pvalue_adj > pvalue_threshold) continue;
       } else {
-        if (GalaxyData[e].pvalue > pvalue_threshold) continue;
+        if (isNaN(GalaxyData[e].pvalue) == false && GalaxyData[e].pvalue > pvalue_threshold) continue;
       }
     }
 
@@ -416,7 +421,7 @@ function fetchGalaxyQuery(query) {
               if (Header) continue;
             }
 
-            var entries = line.split("\t");
+            var entries = line.split(CSV ? "," : "\t");
 
             if (entries.length < 2) {
               continue;
@@ -425,11 +430,11 @@ function fetchGalaxyQuery(query) {
             var fc = parseFloat(entries[1]);
 
             if (isNaN(fc)) {
-              fc = 0;
+              fc = "NaN";
             }
 
-            var pvalue = entries.length > 2 ? parseFloat(entries[2]) : 0;
-            var adj_pvalue = entries.length > 3 ? parseFloat(entries[3]) : 0;
+            var pvalue = entries.length > 2 ? parseFloat(entries[2]) : "N/A";
+            var adj_pvalue = entries.length > 3 ? parseFloat(entries[3]) : "N/A";
             output[entries[0].toLowerCase()] = {
               "name": entries[0],
               "fc": fc,
@@ -480,8 +485,8 @@ function highlightElements(_names) {
     const highlightDefs = [];
 
     for (var _name of _names) {
-      var _value = maxFC != 0 ? GalaxyData[_name].fc / maxFC : 0;
-
+      var _value = 0;
+      if (!isNaN(GalaxyData[_name].fc)) _value = maxFC != 0 ? GalaxyData[_name].fc / maxFC : 0;
       var hex = rgbToHex((1 - Math.abs(_value)) * 255);
       if (_value > 0) hex = '#ff' + hex + hex;else if (_value < 0) hex = '#' + hex + hex + 'ff';else hex = '#ffffff';
 
