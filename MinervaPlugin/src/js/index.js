@@ -139,29 +139,52 @@ function deHighlightAll() {
 
 
 function initMainPageStructure(){
-
+    
     globals.container = $('<div class="' + pluginName + '-container"></div>').appendTo(pluginContainer);
 
     $(`<div id="gal_stat_spinner" class="mt-5">
-        <div class="d-flex justify-content-center">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only"></span>
-                    </div>
-        </div>
-        <div class="d-flex justify-content-center mt-2">
-            <span id="gal_loading_text">Fetching Data ...</span>
-        </div>
+        
     </div>`).appendTo(globals.container);
 
     var url = new URL(window.location.href);
     var query = url.searchParams.get("datasource");
 
+    if(query == null)
+    {
+        $("#gal_stat_spinner").html(`
+            <div class="alert alert-danger ml-2 mr-2" role="alert">
+                <span><i class="fas fa-exclamation-triangle"></i></span>
+                <span class="sr-only">Error:</span>
+                Please supply a 'datasource' parameter within the URL.
+            </div>    
+        `)
+        return;
+    }
     try {
         new URL(query);
     } catch (_) {
-        alert("Data source is not a valid url.");
+        $("#gal_stat_spinner").html(`
+            <div class="alert alert-danger ml-2 mr-2" role="alert">
+                <span><i class="fas fa-exclamation-triangle"></i></span>
+                <span class="sr-only">Error:</span>
+                The data source is not a valid URL.
+            </div>    
+        `)
         return;
     }
+
+
+    $("#gal_stat_spinner").html(`
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="sr-only"></span>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center mt-2">
+            <span id="gal_loading_text">Fetching Data ...</span>
+        </div>
+    `)
+
     try {
         Header = url.searchParams.get("header") != "false";
     } catch (_) {
@@ -374,6 +397,14 @@ function initMainPageStructure(){
     
             fillTable();
         });
+    }).catch(e => {
+        $("#gal_stat_spinner").html(`
+            <div class="alert alert-danger ml-2 mr-2" role="alert">
+                <span><i class="fas fa-exclamation-triangle"></i></span>
+                <span class="sr-only">Error:</span>
+                Could not fetch data from the supplied URL.
+            </div>    
+        `)
     })
 }
 
@@ -491,8 +522,7 @@ function fetchGalaxyQuery(query)
                 else
                 {
                     console.log(client.responseText)
-                    alert("Error while fetching data from: " + query)
-                    reject(_result)
+                    reject()
                 }
             }
         }
