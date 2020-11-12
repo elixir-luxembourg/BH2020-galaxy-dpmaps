@@ -486,7 +486,7 @@ function fetchGalaxyQuery(query)
         var client = new XMLHttpRequest();
 
         client.open('GET', query);
-        client.onerror = function() { alert("The data does'nt have the right CORS headers, please ask your admin to fix it."); reject();};
+        client.onerror = function() { alert("The data doesn't have the right CORS headers, please ask your admin to fix it."); reject();};
         client.onreadystatechange = function() {
             if (this.readyState == 4)
             {
