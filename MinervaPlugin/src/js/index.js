@@ -466,11 +466,19 @@ async function fillTable()
                     continue;
             }
         }
-        var result_row = [`<input type="checkbox" class="gal_clickCBinTable" data="${e}">`, `<a href="#gal_" class="gal_elementlink">${GalaxyData[e].name}</a>`, GalaxyData[e].fc, GalaxyData[e].pvalue, GalaxyData[e].pvalue_adj];
+        var result_row = [`<input type="checkbox" class="gal_clickCBinTable" data="${e}">`, 
+                        `<a href="#gal_" class="gal_elementlink">${GalaxyData[e].name}</a>`, 
+                        '<span data-toggle="tooltip" title="' + GalaxyData[e].fc + '">' + expo(GalaxyData[e].fc, 3, 2) + '</span>', 
+                        '<span data-toggle="tooltip" title="' + GalaxyData[e].pvalue + '">' + expo(GalaxyData[e].pvalue, 4, 2) + '</span>', 
+                        '<span data-toggle="tooltip" title="' + GalaxyData[e].pvalue_adj + '">' + expo(GalaxyData[e].pvalue_adj, 4, 2) + '</span>'];
         GalaxyTable.row.add(result_row);
     }
     GalaxyTable.columns.adjust().draw(); 
 }
+
+$('#gal_galaxy_table').on('draw.dt', function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 
 function fetchGalaxyQuery(query)
 {
@@ -478,6 +486,7 @@ function fetchGalaxyQuery(query)
         var client = new XMLHttpRequest();
 
         client.open('GET', query);
+        client.onerror = function() { alert("The data does'nt have the right CORS headers, please ask your admin to fix it."); reject();};
         client.onreadystatechange = function() {
             if (this.readyState == 4)
             {
@@ -738,3 +747,12 @@ function searchListener(entites) {
     }
     pluginContainer.find('.panel-test .panel-body').html(str);
 }
+
+function expo(x, f=3, e=3) {
+    let _round = Math.floor(x*Math.pow(10,f-1))/Math.pow(10,f-1)
+    if(_round == 0)
+        return x.toExponential(e);
+    else
+      return Math.round(x*Math.pow(10,f))/Math.pow(10,f)
+  }
+  
