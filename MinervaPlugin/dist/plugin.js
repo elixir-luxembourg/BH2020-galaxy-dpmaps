@@ -1,12 +1,12 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-var css = ".starter-kit-container {\n  padding: 10px;\n  background-color: #ffffff;\n}\n.disabledbutton {\n  pointer-events: none;\n  opacity: 0.4;\n}\ninput[type=checkbox] .cbcontainer {\n  margin-left: 0;\n}\nhr {\n  border-radius: 5px;\n  background: linear-gradient(to right, #f28988, #6c6a48);\n}\n.custom_checkbox {\n  margin: 2px 0px 0px 0px;\n  text-align: center !important;\n  color: #6d6d6d;\n  cursor: pointer;\n}\n.custom_checkbox,\ninput[type=checkbox] {\n  vertical-align: middle;\n}\n.custom_checkbox_label {\n  font-family: lato;\n  color: #333;\n}\n.custom_select_label {\n  padding-top: 4px !important;\n  padding: 0;\n  text-align: right;\n  margin-left: 5px;\n}\n.inputfile {\n  font-size: 1.0em;\n  font-weight: 500;\n  color: black;\n  display: inline-block;\n}\n.btn-download {\n  background-color: DodgerBlue;\n  border: none;\n  color: white;\n  padding: 12px 30px;\n  cursor: pointer;\n  font-size: 20px;\n}\n.btn-download:hover {\n  background-color: RoyalBlue;\n}\n.btn-group {\n  width: 100%;\n}\n.clickElementinTable {\n  background-color: transparent;\n  display: inline-block;\n  white-space: nowrap;\n}\n.clickElementinTable body {\n  text-align: center;\n}\n"; (require("browserify-css").createStyle(css, { "href": "GalaxyXMinerva\\__tmp_minerva_plugin\\css\\styles.css" }, { "insertAt": "bottom" })); module.exports = css;
+var css = ".starter-kit-container {\n  padding: 10px;\n  background-color: #ffffff;\n}\n.disabledbutton {\n  pointer-events: none;\n  opacity: 0.4;\n}\ninput[type=checkbox] .cbcontainer {\n  margin-left: 0;\n}\nhr {\n  border-radius: 5px;\n  background: linear-gradient(to right, #f28988, #6c6a48);\n}\n.custom_checkbox {\n  margin: 2px 0px 0px 0px;\n  text-align: center !important;\n  color: #6d6d6d;\n  cursor: pointer;\n}\n.custom_checkbox,\ninput[type=checkbox] {\n  vertical-align: middle;\n}\n.custom_checkbox_label {\n  font-family: lato;\n  color: #333;\n}\n.custom_select_label {\n  padding-top: 4px !important;\n  padding: 0;\n  text-align: right;\n  margin-left: 5px;\n}\n.inputfile {\n  font-size: 1.0em;\n  font-weight: 500;\n  color: black;\n  display: inline-block;\n}\n.btn-download {\n  background-color: DodgerBlue;\n  border: none;\n  color: white;\n  padding: 12px 30px;\n  cursor: pointer;\n  font-size: 20px;\n}\n.btn-download:hover {\n  background-color: RoyalBlue;\n}\n.btn-group {\n  width: 100%;\n}\n.clickElementinTable {\n  background-color: transparent;\n  display: inline-block;\n  white-space: nowrap;\n}\n.clickElementinTable body {\n  text-align: center;\n}\n"; (require("browserify-css").createStyle(css, { "href": "BH2020_Plugin\\__tmp_minerva_plugin\\css\\styles.css" }, { "insertAt": "bottom" })); module.exports = css;
 },{"browserify-css":3}],2:[function(require,module,exports){
 require('../css/styles.css');
 
 const pluginName = 'Galaxy';
 const pluginVersion = '0.9.0';
 const minervaProxyServer = 'https://minerva-dev.lcsb.uni.lu/minerva-proxy/';
-let GalaxyData = {};
+let GalaxyData = [];
 let GalaxyTable = null;
 let maxFC = 0;
 let Header = true;
@@ -20,6 +20,10 @@ const globals = {
   allSpeciesNames: {},
   allSpecies: {},
   allReactions: {},
+  allHGNC: {},
+  allEntrez: {},
+  allUniprot: {},
+  mapping: "",
   count: 0,
   downloadtext: '',
   checkbox_checked: undefined,
@@ -174,6 +178,26 @@ function initMainPageStructure() {
   } catch (_) {}
 
   fetchGalaxyQuery(query).then(raw_galaxy_data => {
+    let mapping_dict = {};
+
+    switch (globals.mapping) {
+      case "identifier_hgnc_symbol":
+        mapping_dict = globals.allHGNC;
+        break;
+
+      case "identifier_entrez":
+        mapping_dict = globals.allEntrez;
+        break;
+
+      case "identifier_uniprot":
+        mapping_dict = globals.allUniprot;
+        break;
+
+      default:
+        mapping_dict = globals.allHGNC;
+        break;
+    }
+
     $("#gal_loading_text").html("Reading Map Elements ...");
     minervaProxy.project.data.getAllBioEntities().then(function (bioEntities) {
       $("#gal_loading_text").html("Generating Table ...");
@@ -187,8 +211,41 @@ function initMainPageStructure() {
             globals.allSpeciesNames[ename] = [];
           }
 
-          globals.allSpeciesNames[ename].push(e.id);
+          globals.allSpeciesNames[ename].push(e);
           globals.allSpecies[e.id] = e;
+
+          for (let reference of e.references) {
+            var reference_id = reference._resource.toLowerCase();
+
+            switch (reference._type) {
+              case "ENTREZ":
+                if (!globals.allEntrez.hasOwnProperty(reference_id)) {
+                  globals.allEntrez[reference_id] = [];
+                }
+
+                globals.allEntrez[reference_id].push(e);
+                break;
+
+              case "HGNC_SYMBOL":
+                if (!globals.allHGNC.hasOwnProperty(reference_id)) {
+                  globals.allHGNC[reference_id] = [];
+                }
+
+                globals.allHGNC[reference_id].push(e);
+                break;
+
+              case "UNIPROT":
+                if (!globals.allUniprot.hasOwnProperty(reference_id)) {
+                  globals.allUniprot[reference_id] = [];
+                }
+
+                globals.allUniprot[reference_id].push(e);
+                break;
+
+              default:
+                break;
+            }
+          }
         } else {
           globals.allReactions[e.id] = e;
         }
@@ -196,13 +253,18 @@ function initMainPageStructure() {
 
       ;
 
-      for (var _name in raw_galaxy_data) {
-        if (globals.allSpeciesNames.hasOwnProperty(_name)) {
-          GalaxyData[_name] = raw_galaxy_data[_name];
-          GalaxyData[_name]["MapElements"] = globals.allSpeciesNames[_name];
+      for (var [id, data] of Object.entries(raw_galaxy_data)) {
+        if (mapping_dict.hasOwnProperty(id)) {
+          var mapped_minerva_elements = mapping_dict[id];
 
-          if (Math.abs(GalaxyData[_name].fc) > maxFC) {
-            maxFC = Math.abs(GalaxyData[_name].fc);
+          if (mapped_minerva_elements.length > 0) {
+            data["name"] = mapped_minerva_elements[0].getName();
+            data["minerva_elements"] = mapped_minerva_elements;
+            GalaxyData.push(data);
+          }
+
+          if (Math.abs(data.fc) > maxFC) {
+            maxFC = Math.abs(data.fc);
           }
         }
       }
@@ -285,15 +347,14 @@ function initMainPageStructure() {
       $('#gal_btn_selectall').on('click', async function () {
         var _text = await disablebutton("gal_btn_selectall");
 
-        var _names = [];
+        var elements = [];
         dehighlightall().then(r => {
           GalaxyTable.rows().every(function () {
             var row = this.nodes().to$();
             row.find('.gal_clickCBinTable').prop('checked', true);
-
-            _names.push(row.find('.gal_clickCBinTable').attr("data"));
+            elements.push(row.find('.gal_clickCBinTable').attr("data"));
           });
-          highlightElements(_names).finally(r => {
+          highlightElements(elements).finally(r => {
             enablebtn("gal_btn_selectall", _text);
           });
         });
@@ -414,18 +475,18 @@ async function fillTable() {
 
   GalaxyTable.clear();
 
-  for (var e in GalaxyData) {
-    if (isNaN(GalaxyData[e].fc) == false && Math.abs(GalaxyData[e].fc) < fc_threshold && $("#gal_checkbox_fc_enable")[0].checked) continue;
+  for (var [id, data] of Object.entries(GalaxyData)) {
+    if (isNaN(data.fc) == false && Math.abs(data.fc) < fc_threshold && $("#gal_checkbox_fc_enable")[0].checked) continue;
 
     if ($("#gal_checkbox_pvalue_enable")[0].checked) {
       if ($('#gal_checkbox_adjusted')[0].checked) {
-        if (isNaN(GalaxyData[e].pvalue_adj) == false && GalaxyData[e].pvalue_adj > pvalue_threshold) continue;
+        if (isNaN(data.pvalue_adj) == false && data.pvalue_adj > pvalue_threshold) continue;
       } else {
-        if (isNaN(GalaxyData[e].pvalue) == false && GalaxyData[e].pvalue > pvalue_threshold) continue;
+        if (isNaN(data.pvalue) == false && data.pvalue > pvalue_threshold) continue;
       }
     }
 
-    var result_row = [`<input type="checkbox" class="gal_clickCBinTable" data="${e}">`, `<a href="#gal_" class="gal_elementlink">${GalaxyData[e].name}</a>`, '<span data-toggle="tooltip" title="' + GalaxyData[e].fc + '">' + expo(GalaxyData[e].fc, 3, 2) + '</span>', '<span data-toggle="tooltip" title="' + GalaxyData[e].pvalue + '">' + expo(GalaxyData[e].pvalue, 4, 2) + '</span>', '<span data-toggle="tooltip" title="' + GalaxyData[e].pvalue_adj + '">' + expo(GalaxyData[e].pvalue_adj, 4, 2) + '</span>'];
+    var result_row = [`<input type="checkbox" class="gal_clickCBinTable" data="${id}">`, `<a href="#gal_" data="${id}" class="gal_elementlink">${data.name}</a>`, '<span data-toggle="tooltip" title="' + data.fc + '">' + expo(data.fc, 3, 2) + '</span>', '<span data-toggle="tooltip" title="' + data.pvalue + '">' + expo(data.pvalue, 4, 2) + '</span>', '<span data-toggle="tooltip" title="' + data.pvalue_adj + '">' + expo(data.pvalue_adj, 4, 2) + '</span>'];
     GalaxyTable.row.add(result_row);
   }
 
@@ -439,6 +500,7 @@ $('#gal_galaxy_table').on('draw.dt', function () {
 function fetchGalaxyQuery(query) {
   return new Promise((resolve, reject) => {
     var client = new XMLHttpRequest();
+    let mapping = "name";
     client.open('GET', query);
 
     client.onerror = function () {
@@ -456,7 +518,11 @@ function fetchGalaxyQuery(query) {
           for (var line of raw_response.split("\n")) {
             if (firstline) {
               firstline = false;
-              if (Header) continue;
+
+              if (Header) {
+                globals.mapping = line.split(CSV ? "," : "\t")[0];
+                continue;
+              }
             }
 
             var entries = line.split(CSV ? "," : "\t");
@@ -474,7 +540,7 @@ function fetchGalaxyQuery(query) {
             var pvalue = entries.length > 2 ? parseFloat(entries[2]) : "N/A";
             var adj_pvalue = entries.length > 3 ? parseFloat(entries[3]) : "N/A";
             output[entries[0].toLowerCase()] = {
-              "name": entries[0],
+              "id": entries[0],
               "fc": fc,
               "pvalue": pvalue,
               "pvalue_adj": adj_pvalue
@@ -493,17 +559,10 @@ function fetchGalaxyQuery(query) {
   });
 }
 
-function dehighlightElements(elements) {
+function dehighlightElement(element) {
+  var minerva_elements = GalaxyData[element].minerva_elements;
   minervaProxy.project.map.getHighlightedBioEntities().then(highlighted => {
-    var dehighlightes = [];
-
-    for (var highlighted_element of highlighted) {
-      if (elements.includes(highlighted_element.element.id)) {
-        dehighlightes.push(highlighted_element);
-      }
-    }
-
-    minervaProxy.project.map.hideBioEntity(dehighlightes);
+    minervaProxy.project.map.hideBioEntity(minerva_elements.filter(e => highlighted.includes(e)));
   });
 }
 
@@ -517,23 +576,23 @@ function dehighlightall() {
   });
 }
 
-function highlightElements(_names) {
+function highlightElements(node_ids) {
   return new Promise((resolve, reject) => {
     const highlightDefs = [];
 
-    for (var _name of _names) {
+    for (var node_id of node_ids) {
+      var e = GalaxyData[node_id];
       var _value = 0;
-      if (!isNaN(GalaxyData[_name].fc)) _value = maxFC != 0 ? GalaxyData[_name].fc / maxFC : 0;
+      if (!isNaN(e.fc)) _value = maxFC != 0 ? e.fc / maxFC : 0;
       var hex = rgbToHex((1 - Math.abs(_value)) * 255);
       if (_value > 0) hex = '#ff' + hex + hex;else if (_value < 0) hex = '#' + hex + hex + 'ff';else hex = '#ffffff';
 
-      for (var _id of globals.allSpeciesNames[_name]) {
-        var e = globals.allSpecies[_id];
+      for (var minerva_element of e.minerva_elements) {
         highlightDefs.push({
           element: {
-            id: e.id,
-            modelId: e.getModelId(),
-            type: e.constructor.name.toUpperCase()
+            id: minerva_element.id,
+            modelId: minerva_element.getModelId(),
+            type: minerva_element.constructor.name.toUpperCase()
           },
           type: "SURFACE",
           options: {
@@ -652,22 +711,22 @@ function focusOnSelected() {
 }
 
 $(document).on('click', '.gal_elementlink', function () {
-  selectElementonMap($(this).html(), false);
+  selectElementonMap($(this).attr('data'), false);
 });
 $(document).on('change', '.gal_clickCBinTable', function () {
   if ($(this).prop('checked') === true) {
     highlightElements([$(this).attr('data')]);
   } else {
-    dehighlightElements(globals.allSpeciesNames[$(this).attr('data')]);
+    dehighlightElement($(this).attr('data'));
   }
 });
 
 function selectElementonMap(element) {
-  let namelower = element.toLowerCase();
+  var minerva_elements = GalaxyData[element].minerva_elements;
   globals.selected = [];
 
-  if (globals.allSpeciesNames.hasOwnProperty(namelower)) {
-    globals.selected.push(globals.allSpecies[globals.allSpeciesNames[namelower][0]]);
+  if (minerva_elements.length > 0) {
+    globals.selected.push(minerva_elements[0]);
     focusOnSelected();
   }
 }
