@@ -278,7 +278,7 @@ function initMainPageStructure() {
                 </div>
                 <div class="row mb-4 mt-2 ml-2 disabledbutton" id="gal_fc-container">
                     <div class="col-auto custom_select_label" style="padding:0; width: 30%; text-align: right; ">
-                        <span style="margin: 0; display: inline-block; vertical-align: middle; line-height: normal;">Absulte FC Threshold:</span>
+                        <span style="margin: 0; display: inline-block; vertical-align: middle; line-height: normal;">Absolute FC Threshold:</span>
                     </div>
                     <div class="col">
                         <input type="text" class="textfield" value="1.00" id="gal_fcthreshold"/>
